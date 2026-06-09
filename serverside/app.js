@@ -22,9 +22,10 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS configuration
+// ========== UPDATED CORS CONFIGURATION ==========
+// Allow all origins for production (temporary fix)
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:5174'],
+  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -49,6 +50,21 @@ app.get('/api/health', (req, res) => {
     success: true, 
     message: 'Server is running',
     environment: process.env.NODE_ENV
+  });
+});
+
+// Root route - prevents 404 at root
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    success: true, 
+    message: 'Family Vault API is running',
+    endpoints: {
+      health: '/api/health',
+      register: '/api/auth/register',
+      login: '/api/auth/login',
+      members: '/api/members',
+      documents: '/api/documents'
+    }
   });
 });
 
