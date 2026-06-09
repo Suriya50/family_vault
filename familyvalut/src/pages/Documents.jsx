@@ -18,6 +18,7 @@ const Documents = () => {
   const [fileName, setFileName] = useState('')
   const [selectedMember, setSelectedMember] = useState(null)
   const [previewDoc, setPreviewDoc] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState(null)  // ADD THIS
 
   useEffect(() => {
     fetchData()
@@ -76,8 +77,31 @@ const Documents = () => {
     }
   }
 
-  const handlePreview = (doc) => {
+  // FIXED: Preview function - downloads and creates URL for images
+  const handlePreview = async (doc) => {
     setPreviewDoc(doc)
+    
+    // For images, download and create object URL
+    if (doc.type?.startsWith('image/')) {
+      try {
+        const response = await downloadDocument(doc._id)
+        const url = URL.createObjectURL(response.data)
+        setPreviewUrl(url)
+      } catch (error) {
+        console.error('Preview error:', error)
+        toast.error('Failed to load preview')
+      }
+    } else {
+      setPreviewUrl(null)
+    }
+  }
+
+  const closePreview = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)  // Clean up
+    }
+    setPreviewDoc(null)
+    setPreviewUrl(null)
   }
 
   const handleDownload = async (doc) => {
@@ -149,7 +173,6 @@ const Documents = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {/* General Folder */}
             <div
               onClick={() => setSelectedMember({ name: 'General', _id: null })}
               className="bg-white rounded-lg shadow p-3 text-center active:scale-95 transition cursor-pointer"
@@ -161,7 +184,6 @@ const Documents = () => {
               <p className="text-xs text-gray-400">{generalCount} files</p>
             </div>
 
-            {/* Members */}
             {members.map((member) => {
               const count = documents.filter(d => d.familyMember?._id === member._id).length
               return (
@@ -187,7 +209,6 @@ const Documents = () => {
   // Documents view
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <button onClick={() => { setSelectedMember(null); setSearchTerm('') }} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -203,7 +224,6 @@ const Documents = () => {
         </button>
       </div>
 
-      {/* Search */}
       <div className="relative">
         <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
         <input
@@ -215,7 +235,6 @@ const Documents = () => {
         />
       </div>
 
-      {/* Files Grid */}
       {filteredDocs.length === 0 ? (
         <div className="text-center py-10 bg-white rounded-lg">
           <FiFileText size={40} className="mx-auto text-gray-300 mb-2" />
@@ -249,25 +268,29 @@ const Documents = () => {
         </div>
       )}
 
-      {/* Preview Modal */}
+      {/* FIXED: Preview Modal */}
       {previewDoc && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full">
+          <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-hidden">
             <div className="flex justify-between items-center p-3 border-b">
               <h3 className="font-medium text-sm truncate">{previewDoc.name}</h3>
-              <button onClick={() => setPreviewDoc(null)} className="p-1 hover:bg-gray-100 rounded">
+              <button onClick={closePreview} className="p-1 hover:bg-gray-100 rounded">
                 <FiX size={18} />
               </button>
             </div>
-            <div className="p-4 flex justify-center">
+            <div className="p-4 flex justify-center items-center min-h-[200px]">
               {previewDoc.type?.startsWith('image/') ? (
-                <img src={`/uploads/${previewDoc.filename}`} alt={previewDoc.name} className="max-w-full rounded" />
+                <img 
+                  src={previewUrl} 
+                  alt={previewDoc.name} 
+                  className="max-w-full max-h-[400px] rounded object-contain"
+                />
               ) : previewDoc.type?.includes('pdf') ? (
                 <div className="text-center">
                   <FaFilePdf size={48} className="text-red-500 mx-auto mb-2" />
                   <p className="text-sm text-gray-600">PDF Document</p>
                   <button onClick={() => handleDownload(previewDoc)} className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">
-                    Download
+                    Download to View
                   </button>
                 </div>
               ) : (
@@ -275,7 +298,7 @@ const Documents = () => {
                   {getFileIcon(previewDoc.type)}
                   <p className="mt-2 text-sm text-gray-600">Preview not available</p>
                   <button onClick={() => handleDownload(previewDoc)} className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">
-                    Download
+                    Download File
                   </button>
                 </div>
               )}

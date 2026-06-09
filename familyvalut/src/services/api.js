@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = '/api';
+// ✅ UPDATED: Use your deployed backend URL on Render
+// Make sure the URL is exactly as provided by Render
+const API_URL = 'https://family-vault-0mio.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_URL,
