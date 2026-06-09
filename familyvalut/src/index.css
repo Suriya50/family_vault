@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Better touch targets */
+button, 
+[role="button"] {
+  min-height: 40px;
+  min-width: 40px;
+}
+
+/* Prevent zoom on mobile */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* Smooth transitions */
+* {
+  transition-duration: 150ms;
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
